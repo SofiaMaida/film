@@ -1,14 +1,13 @@
 package ar.com.ada.sb.api.film.service;
 
-import ar.com.ada.sb.api.film.exception.ApiEntityError;
-import ar.com.ada.sb.api.film.exception.BusinessLogicException;
+import ar.com.ada.sb.api.film.component.BusinessLogicExceptionComponent;
 import ar.com.ada.sb.api.film.model.dto.DirectorDTO;
 import ar.com.ada.sb.api.film.model.entity.Director;
-import ar.com.ada.sb.api.film.model.mapper.DirectorMapper;
+import ar.com.ada.sb.api.film.model.mapper.circular.dependency.CycleAvoidingMappingContext;
+import ar.com.ada.sb.api.film.model.mapper.circular.dependency.DirectorCycleMapper;
 import ar.com.ada.sb.api.film.model.repository.DirectorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,58 +16,60 @@ import java.util.Optional;
 @Service("directorServices")
 public class DirectorServices implements Services<DirectorDTO>{
 
+    @Autowired @Qualifier("businessLogicExceptionComponent")
+    private BusinessLogicExceptionComponent logicExceptionComponent;
+
     @Autowired @Qualifier("directorRepository")
     private DirectorRepository directorRepository;
 
-    private DirectorMapper directorMapper;
+    private DirectorCycleMapper directorCycleMapper = DirectorCycleMapper.MAPPER;
 
-    public DirectorServices(DirectorMapper directorMapper) {
-        this.directorMapper = directorMapper;
-    }
+    @Autowired @Qualifier("cycleAvoidingMappingContext")
+    private CycleAvoidingMappingContext context;
 
     @Override
     public List<DirectorDTO> findAll() {
-        List<Director> directorsEntityList = directorRepository.findAll();
-        List<DirectorDTO> directorsDtoList = directorMapper.toDto(directorsEntityList);
-        return directorsDtoList;
+        List<Director> all = directorRepository.findAll();
+        List<DirectorDTO> directorDtoList = directorCycleMapper.toDto(all, context);
+        return directorDtoList;
     }
 
     public DirectorDTO findDirectorById(Long id) {
-        // SELECT * FROM Director WHERE id = ?
         Optional<Director> byIdOptional = directorRepository.findById(id);
         DirectorDTO directorDTO = null;
 
         if (byIdOptional.isPresent()) {
-            Director directorById = byIdOptional.get();
-            directorDTO = directorMapper.toDto(directorById);
+            Director director = byIdOptional.get();
+            directorDTO = directorCycleMapper.toDto(director, context);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Director", id);
         }
         return directorDTO;
     }
 
     @Override
     public DirectorDTO save(DirectorDTO dto) {
-        Director directorToSave = directorMapper.toEntity(dto);
+        Director directorToSave = directorCycleMapper.toEntity(dto, context);
         Director directorSaved = directorRepository.save(directorToSave);
-        DirectorDTO directorDTOSaved = directorMapper.toDto(directorSaved);
-        return directorDTOSaved;
+        DirectorDTO directorDtoSaved = directorCycleMapper.toDto(directorSaved, context);
+        return directorDtoSaved;
     }
 
-    public DirectorDTO updateDirector(DirectorDTO directorDTOToUpdate, Long id) {
+    public DirectorDTO updateDirector(DirectorDTO directorDtoToUpdate, Long id) {
         Optional<Director> byIdOptional = directorRepository.findById(id);
-        DirectorDTO directorDTOUpdated = null;
+        DirectorDTO directorDtoUpdated = null;
 
         if (byIdOptional.isPresent()) {
             Director directorById = byIdOptional.get();
-            directorDTOToUpdate.setId(directorById.getId());
-            Director directorToUpdate = directorMapper.toEntity(directorDTOToUpdate);
+            directorDtoToUpdate.setId(directorById.getId());
+            Director directorToUpdate = directorCycleMapper.toEntity(directorDtoToUpdate, context);
             Director directorUpdated = directorRepository.save(directorToUpdate);
-            directorDTOUpdated = directorMapper.toDto(directorUpdated);
+            directorDtoUpdated = directorCycleMapper.toDto(directorUpdated, context);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Director", id);
         }
-        return directorDTOUpdated;
+
+        return directorDtoUpdated;
     }
 
     @Override
@@ -79,22 +80,8 @@ public class DirectorServices implements Services<DirectorDTO>{
             Director directorToDelete = byIdOptional.get();
             directorRepository.delete(directorToDelete);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Director", id);
         }
-    }
-
-    private void throwBusinessLogicException(Long id) {
-        ApiEntityError apiEntityError = new ApiEntityError(
-                "Director",
-                "NotFound",
-                "The Director with id '" + id + "' does not exist"
-        );
-
-        throw new BusinessLogicException(
-                "Director does not exist",
-                HttpStatus.NOT_FOUND,
-                apiEntityError
-        );
     }
 
 }

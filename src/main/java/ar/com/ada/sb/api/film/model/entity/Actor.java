@@ -29,8 +29,15 @@ public class Actor {
     @ManyToMany(mappedBy = "actors")
     private Set<Film> films;
 
+    public Actor(String name, String gender, LocalDate birthday) {
+        this.name = name;
+        this.gender = gender;
+        this.birthday = birthday;
+    }
+
     public Actor(Long id) {
         this.id = id;
     }
+
 
 }

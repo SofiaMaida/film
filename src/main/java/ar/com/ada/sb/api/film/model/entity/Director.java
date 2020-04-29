@@ -32,6 +32,11 @@ public class Director {
     @OneToMany(mappedBy = "directors")
     private Set<Film> films;
 
+    public Director(String name, String biography) {
+        this.name = name;
+        this.biography = biography;
+    }
+
     public Director(Long id) {
         this.id = id;
     }

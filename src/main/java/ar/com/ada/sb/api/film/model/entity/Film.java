@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.util.Set;
 
 @Getter @Setter
 @NoArgsConstructor
@@ -20,24 +20,19 @@ public class Film {
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(nullable = false, length = 100)
-    private String gender;
-
-    @Column(nullable = false, columnDefinition = "DATETIME")
-    private Date year;
-
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "director_id", nullable = false)
+    @JoinColumn(name = "director_id", nullable = true)
     private Director director;
 
     @ManyToMany
-    @JoinTable(name = "Actor_has_Film",
+    @JoinTable(
+            name = "Actor_has_Film",
             joinColumns = @JoinColumn(name = "Film_id"),
             inverseJoinColumns = @JoinColumn(name = "Actor_id"))
-    private Actor actor;
+    private Set<Actor> actors;
 
     public Film(String title, String description) {
         this.title = title;
@@ -48,7 +43,8 @@ public class Film {
         this.id = id;
     }
 
-    //public void addActor(Actor actor) {
-      //  this.actors.add(actor);
+    public void addActor(Actor actor) {
+        this.actors.add(actor);
+    }
 
 }

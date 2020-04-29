@@ -49,4 +49,17 @@ public class FilmController {
         return ResponseEntity.noContent().build();
     }
 
+    // localhost:8080/films/1/actors/20 y localhost:8080/films/1/actors/20/
+    @PutMapping({"/{filmId}/actors/{actorId}", "/{filmId}/actors/{actorId}/"})
+    public ResponseEntity addActorToFilm(@PathVariable Long filmId, @PathVariable Long actorId) {
+        FilmDTO filmDtoWithNewActor = filmServices.addActorToFilm(actorId, filmId);
+        return ResponseEntity.ok(filmDtoWithNewActor);
+    }
+
+    @PutMapping({"/{filmId}/directors/{directorId}", "/{fildId}/directors/{directorId}"})
+    public ResponseEntity addDirectorToFilm(@PathVariable Long filmId, @PathVariable Long directorId) {
+        FilmDTO filmDtoWithDirector = filmServices.addDirectorToFilm(directorId, filmId);
+        return ResponseEntity.ok(filmDtoWithDirector);
+    }
+
 }

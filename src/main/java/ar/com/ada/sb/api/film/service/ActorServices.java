@@ -1,14 +1,14 @@
 package ar.com.ada.sb.api.film.service;
 
-import ar.com.ada.sb.api.film.exception.ApiEntityError;
-import ar.com.ada.sb.api.film.exception.BusinessLogicException;
+import ar.com.ada.sb.api.film.component.BusinessLogicExceptionComponent;
 import ar.com.ada.sb.api.film.model.dto.ActorDTO;
 import ar.com.ada.sb.api.film.model.entity.Actor;
 import ar.com.ada.sb.api.film.model.mapper.ActorMapper;
+import ar.com.ada.sb.api.film.model.mapper.circular.dependency.ActorCycleMapper;
+import ar.com.ada.sb.api.film.model.mapper.circular.dependency.CycleAvoidingMappingContext;
 import ar.com.ada.sb.api.film.model.repository.ActorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,19 +17,23 @@ import java.util.Optional;
 @Service("actorServices")
 public class ActorServices implements Services<ActorDTO> {
 
+    @Autowired @Qualifier("businessLogicExceptionComponent")
+    private BusinessLogicExceptionComponent logicExceptionComponent;
+
     @Autowired @Qualifier("actorRepository")
     private ActorRepository actorRepository;
 
-    private ActorMapper actorMapper;
+    private ActorCycleMapper actorCycleMapper = ActorCycleMapper.MAPPER;
 
-    public ActorServices(ActorMapper actorMapper) {
-        this.actorMapper = actorMapper;
-    }
+    @Autowired @Qualifier("cycleAvoidingMappingContext")
+    private CycleAvoidingMappingContext context;
+
+    //private ActorMapper actorMapper;
 
     @Override
     public List<ActorDTO> findAll() {
         List<Actor> actorsEntityList = actorRepository.findAll();
-        List<ActorDTO> actorsDtoList = actorMapper.toDto(actorsEntityList);
+        List<ActorDTO> actorsDtoList = actorCycleMapper.toDto(actorsEntityList, context);
         return actorsDtoList;
     }
 
@@ -40,9 +44,9 @@ public class ActorServices implements Services<ActorDTO> {
 
         if (byIdOptional.isPresent()) {
             Actor actorById = byIdOptional.get();
-            actorDTO = actorMapper.toDto(actorById);
+            actorDTO = actorCycleMapper.toDto(actorById, context);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Actor", id);
         }
 
         return actorDTO;
@@ -50,9 +54,9 @@ public class ActorServices implements Services<ActorDTO> {
 
     @Override
     public ActorDTO save(ActorDTO dto) {
-        Actor actorToSave = actorMapper.toEntity(dto);
+        Actor actorToSave = actorCycleMapper.toEntity(dto, context);
         Actor actorSaved = actorRepository.save(actorToSave);
-        ActorDTO actorDtoSaved = actorMapper.toDto(actorSaved);
+        ActorDTO actorDtoSaved = actorCycleMapper.toDto(actorSaved, context);
         return actorDtoSaved;
     }
 
@@ -63,11 +67,11 @@ public class ActorServices implements Services<ActorDTO> {
         if (byIdOptional.isPresent()) {
             Actor actorById = byIdOptional.get();
             actorDtoToUpdate.setId(actorById.getId());
-            Actor actorToUpdate = actorMapper.toEntity(actorDtoToUpdate);
+            Actor actorToUpdate = actorCycleMapper.toEntity(actorDtoToUpdate, context);
             Actor actorUpdated = actorRepository.save(actorToUpdate);
-            actorDtoUpdated = actorMapper.toDto(actorUpdated);
+            actorDtoUpdated = actorCycleMapper.toDto(actorUpdated, context);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Actor", id);
         }
 
         return actorDtoUpdated;
@@ -81,21 +85,8 @@ public class ActorServices implements Services<ActorDTO> {
             Actor actorToDelete = byIdOptional.get();
             actorRepository.delete(actorToDelete);
         } else {
-            throwBusinessLogicException(id);
+            logicExceptionComponent.throwExceptionEntityNotFound("Actor", id);
         }
     }
 
-    private void throwBusinessLogicException(Long id) {
-        ApiEntityError apiEntityError = new ApiEntityError(
-                "Actor",
-                "NotFound",
-                "The actor with id '" + id + "' does not exist"
-        );
-
-        throw new BusinessLogicException(
-                "actor does not exist",
-                HttpStatus.NOT_FOUND,
-                apiEntityError
-        );
-    }
 }
