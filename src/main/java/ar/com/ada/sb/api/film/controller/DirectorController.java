@@ -19,6 +19,12 @@ public class DirectorController {
     @Autowired @Qualifier("directorServices")
     private DirectorServices directorServices;
 
+    @GetMapping({ "", "/" })
+    public ResponseEntity getAllActors() {
+        List<DirectorDTO> all = directorServices.findAll();
+        return ResponseEntity.ok(all);
+    }
+
     @GetMapping({"", "/"})
     public ResponseEntity getAllDirectors() {
         List<DirectorDTO> all = directorServices.findAll();;

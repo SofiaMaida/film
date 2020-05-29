@@ -7,13 +7,14 @@ import lombok.Setter;
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Set;
+
 @Getter @Setter
 @NoArgsConstructor
 public class FilmDTO implements Serializable {
 
     private Long id;
 
-    @NotBlank(message = "name is required")
+    @NotBlank(message = "title is required")
     private String title;
 
     @NotBlank(message = "description is required")

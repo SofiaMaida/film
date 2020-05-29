@@ -19,6 +19,12 @@ public class FilmController {
     @Autowired @Qualifier("filmServices")
     private FilmServices filmServices;
 
+    @GetMapping({ "", "/" })
+    public ResponseEntity getAllActors() {
+        List<FilmDTO> all = filmServices.findAll();
+        return ResponseEntity.ok(all);
+    }
+
     @GetMapping({"", "/"})
     public ResponseEntity getAllFilms() {
         List<FilmDTO> all = filmServices.findAll();
@@ -34,7 +40,7 @@ public class FilmController {
     @PostMapping({"", "/"})
     public ResponseEntity addNewFilm(@Valid @RequestBody FilmDTO filmDTO) throws URISyntaxException {
         FilmDTO filmSaved = filmServices.save(filmDTO);
-        return ResponseEntity.created(new URI("/films/" + filmDTO.getId())).body(filmSaved);
+        return ResponseEntity.created(new URI("/directors/" + filmDTO.getId())).body(filmSaved);
     }
 
     @PutMapping({"", "/"})

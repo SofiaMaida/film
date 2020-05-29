@@ -1,6 +1,7 @@
 package ar.com.ada.sb.api.film.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class ActorDTO implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 
+    @JsonIgnoreProperties(value = "actors")
     private Set<FilmDTO> films;
 
     public ActorDTO(Long id, String name, String gender, LocalDate birthday, Set<FilmDTO> films) {

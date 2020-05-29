@@ -6,11 +6,12 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor
-@Entity(name = "Director")
+@Entity
+@Table(name = "Director")
 public class Director {
 
     @Id
@@ -29,8 +30,8 @@ public class Director {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String biography;
 
-    @OneToMany(mappedBy = "directors")
-    private Set<Film> films;
+    @OneToMany(mappedBy = "director")
+    private List<Film> films;
 
     public Director(String name, String biography) {
         this.name = name;
