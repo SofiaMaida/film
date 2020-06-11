@@ -17,7 +17,7 @@ import java.util.List;
 @Component
 public class DirectorLoaderData implements ApplicationRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActorLoaderData.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DirectorLoaderData.class);
 
     @Autowired @Qualifier("directorRepository")
     private DirectorRepository directorRepository;

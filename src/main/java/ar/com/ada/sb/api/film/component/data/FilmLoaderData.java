@@ -17,7 +17,7 @@ import java.util.List;
 @Component
 public class FilmLoaderData implements ApplicationRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActorLoaderData.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilmLoaderData.class);
 
     @Autowired
     @Qualifier("filmRepository")
